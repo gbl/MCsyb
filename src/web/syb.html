@@ -1,0 +1,160 @@
+<html>
+<head>
+<title>Minecraft Build Display</title>
+<meta charset="UTF-8" />
+<script src="sybtitles.js"></script>
+<link rel="stylesheet" href="syb.css" />
+<link rel="stylesheet" href="syboffsets-32.css" />
+</head>
+<body>
+<table>
+<tr style="vertical-align:top;"><td>
+Build-display
+<table class="sybcanvas" id="buildgrid">
+<tr><td></td></tr>
+</table>
+</td><td>
+Material Count
+<div id="matcount"></div>
+</td><td>
+Layer selector
+<br>
+<button id="layerup" type="button">+</button>
+<br>
+Layer <span id="layerdisplay">0</span>
+<br>
+<button id="layerdown" type="button">-</button>
+
+</td></tr>
+</table>
+<script>
+
+var currentlayer=0;
+var occurence=[];
+
+function displaylayer(layer) {
+	var tabcontent="";
+	var leveldata=build.data[layer];
+
+	// alert("building "+layer);
+	for (i=0; i<build.depth; i++) {
+		tabcontent+="<tr>";
+		for (j=0; j<build.width; j++) {
+			celltype=leveldata.charCodeAt(i*build.width+j);
+			if (celltype < 256) {
+				celltype=build.map[String.fromCharCode(celltype)];
+			}
+			// Note that this removes the 0x5000 offset as well.
+			// Will break if baseoffset is not a multiple of 0x1000.
+			celltypehex=(celltype+0x1000).toString(16).substr(-3);
+			tabcontent+='<td class="sybcell c'+celltypehex;
+			if (i%5==0) { tabcontent+=" sybbrow"; }
+			if (j%5==0) { tabcontent+=" sybbcol"; }
+			tabcontent+='" title="'+sybtitles[celltypehex]+'"></td>';
+		}
+		tabcontent+="</tr>";
+	}
+	document.getElementById('buildgrid').innerHTML=tabcontent;
+	document.getElementById('layerdisplay').innerHTML=layer;
+}
+
+function countmaterial() {
+	for (var i=0; i<build.height; i++) {
+		var leveldata=build.data[i];
+		for (var j=0; j<build.depth; j++) {
+			for (var k=0; k<build.width; k++) {
+				celltype=leveldata.charCodeAt(j*build.width+k);
+				if (celltype < 256) {
+					celltype=build.map[String.fromCharCode(celltype)];
+				}
+				if (typeof occurence[celltype%0x1000]=='undefined')
+					occurence[celltype%0x1000]=1;
+				else
+					occurence[celltype%0x1000]++;
+				// alert("occurence["+(celltype%0x1000)+"]="+occurence[celltype%0x1000]);
+			}
+		}
+	}
+}
+
+function displaymaterial() {
+	var content="";
+	for (var i=0; i<256; i++) {
+		var subtotal=0;
+		var subcontent="";
+		var celltypehex=(i*16+0x1000).toString(16).substr(-3,2);
+		for (var meta=0; meta<16; meta++) {
+			if (occurence[i*16+meta]>0) {
+				// alert('type '+i+' meta '+meta+': '+occurence[i*16+meta]);
+				var subtypehex=(i*16+meta+0x1000).toString(16).substr(-3);
+				subcontent+='<div class="sybsubmaterial">'+
+					occurence[i*16+meta]+
+					' '+
+					sybtitles[subtypehex]+
+					'</div>';
+				subtotal+=occurence[i*16+meta];
+			}
+		}
+		if (subtotal>0) {
+			content+='<div class="sybmaterial">'+subtotal+' '+
+					sybgrouptitles[celltypehex]+
+					'</div>'+
+					subcontent;
+		}
+	}
+	document.getElementById('matcount').innerHTML=content;
+}
+
+function up() {
+	if (currentlayer<build.height-1) {
+		currentlayer++;
+		displaylayer(currentlayer);
+	}
+}
+
+function down() {
+	if (currentlayer>0) {
+		currentlayer--;
+		displaylayer(currentlayer);
+	}
+}
+
+function init() {
+	document.getElementById("layerup").onclick=up;
+	document.getElementById("layerdown").onclick=down;
+	currentlayer=0;
+
+	var req;
+	if (window.XMLHttpRequest) {
+		req=new XMLHttpRequest();
+	} else if (window.ActiveXObject) { // IE 6 and older
+	    	req=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	req.onreadystatechange=function() {
+		if (req.readyState==XMLHttpRequest.DONE) {
+			if (req.status==200) {
+				eval(req.responseText);
+				// alert("eval done"+req.responseText);
+				displaylayer(0);
+				countmaterial();
+				displaymaterial();
+			} else {
+				document.getElementById('buildgrid').innerHTML='<tr><td>Status '+req.status+'</td></tr>';
+			}
+		}
+	}
+	proto=window.location.protocol;
+	host=window.location.host;
+	model=window.location.hash.split("#")[1];
+	url=proto+"//"+host+"/builds/"+model+".js";
+	// alert(url);
+	req.open('GET', url, true);
+	req.send(null);
+}
+
+var build;
+init();
+
+</script>
+</body>
+</html>

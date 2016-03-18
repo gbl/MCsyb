@@ -1,0 +1,29 @@
+table.sybcanvas {
+	/* background-color: #ff00ff; */
+	border:2px solid;
+	border-collapse: separate;;
+	border-spacing: 0px;
+	empty-cells: show;
+}
+td.sybcell {
+	/* width:16px; height: 16px; */
+	/* background-size: 272px 4352px */
+
+	width:32px; height: 32px;
+	background-size: 544px 8704px;
+
+	border: 1px solid;
+	border-color: #000000;
+	padding: 0px;
+	margin: 0px;
+	background-image: url(sybbi.png);
+}
+
+td.sybbrow { border-top-color : #ff0000; border-top-width:  2px;}
+td.sybbcol { border-left-color: #ff0000; border-left-width: 2px;}
+
+button {
+	width: 20px;
+	height: 20px;
+	background-color: #8080ff;
+}
