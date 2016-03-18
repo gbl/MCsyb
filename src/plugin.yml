@@ -1,0 +1,10 @@
+## YAML Template.
+name: MCsyb
+main: de.guntram.bukkit.MCsyb.MCsyb
+version: 0.3
+commands:
+    mcsyb:
+        description: Access to all the share your build commands.
+        usage: /mcsyb c1 | c2 | name | export
+        permission: MCsyb.basic
+        permission-message: MCsyb.basic disabled for you.
